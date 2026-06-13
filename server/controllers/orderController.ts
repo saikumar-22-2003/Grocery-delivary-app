@@ -108,9 +108,9 @@ export const createOrder = async (req: Request, res: Response) => {
 export const getUserOrders = async (req: Request, res: Response) => {
     const { status } = req.query;
 
+    // FIXED: Removed NOT filter
     const where: any = {
         userId: req.user!.id,
-        NOT: [{ paymentMethod: "card", isPaid: false }],
     };
 
     if (status && status !== "all") {
@@ -164,8 +164,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // Get all orders (admin)
 // GET /api/orders/all
 export const getAllOrders = async (req: Request, res: Response) => {
+    //  FIXED: Removed NOT filter - show ALL orders in admin
     const orders = await prisma.order.findMany({
-        where: { NOT: [{ paymentMethod: "card", isPaid: false }] },
         include: {
             user: { select: { name: true, email: true } },
             deliveryPartner: { select: { name: true, phone: true, email: true } },

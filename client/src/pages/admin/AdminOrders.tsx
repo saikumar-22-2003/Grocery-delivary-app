@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TruckIcon } from "lucide-react";
+import { TruckIcon, Trash2Icon } from "lucide-react"; //  Added Trash2Icon
 import toast from "react-hot-toast";
 import type { DeliveryPartner } from "../../types";
 import Loading from "../../components/Loading";
@@ -14,28 +14,24 @@ export default function AdminOrders() {
     const [loading, setLoading] = useState(true);
     const [assignModal, setAssignModal] = useState<string | null>(null);
     const [selectedPartner, setSelectedPartner] = useState("");
+    const [deleteModal, setDeleteModal] = useState<string | null>(null); //  Added
 
     const fetchOrders = async () => {
-         try {
+        try {
             const { data } = await api.get("/orders/all");
             setOrders(data.orders);
-         } catch (error: any){
-            toast.error(error.response?.data?.message || "Failed to load orders") 
-         } finally {
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to load orders")
+        } finally {
             setLoading(false);
-         }
+        }
     };
 
     const fetchPartners = async () => {
-       try {
-        const { data } = await api.get("/admin/delivery-partners/")
-        setPartners(data.partners.filter((p: DeliveryPartner) => p.isActive));
-
-        
-
-       } catch {
-
-       }
+        try {
+            const { data } = await api.get("/admin/delivery-partners/")
+            setPartners(data.partners.filter((p: DeliveryPartner) => p.isActive));
+        } catch { }
     };
 
     useEffect(() => {
@@ -44,16 +40,13 @@ export default function AdminOrders() {
     }, []);
 
     const handleStatusChange = async (id: string, newStatus: string) => {
-       try {
-        await api.put(`/orders/${id}/status`, { status: newStatus });
-        toast.success("Order status updated");
-        fetchOrders();
-
-
-       } catch (error: any) {
-        toast.error(error.reponse?.data?.message || "Failed to update status");
-
-       }
+        try {
+            await api.put(`/orders/${id}/status`, { status: newStatus });
+            toast.success("Order status updated");
+            fetchOrders();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to update status");
+        }
     };
 
     const handleAssign = async () => {
@@ -64,10 +57,21 @@ export default function AdminOrders() {
             setAssignModal(null);
             setSelectedPartner("");
             fetchOrders();
-
-
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to assign partner");
+        }
+    };
+
+    //  New delete handler
+    const handleDelete = async () => {
+        if (!deleteModal) return;
+        try {
+            await api.delete(`/admin/orders/${deleteModal}`);
+            toast.success("Order deleted successfully");
+            setDeleteModal(null);
+            fetchOrders();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to delete order");
         }
     };
 
@@ -99,12 +103,13 @@ export default function AdminOrders() {
                                 <th className="px-6 py-4">Total</th>
                                 <th className="px-6 py-4">Delivery Partner</th>
                                 <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4">Action</th> {/*  New column */}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-app-border">
                             {orders.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">No orders found.</td>
+                                    <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">No orders found.</td>
                                 </tr>
                             ) : (
                                 orders.map((order: any) => (
@@ -144,6 +149,17 @@ export default function AdminOrders() {
                                                 {statusOptions.map((s) => (<option key={s} value={s}>{s}</option>))}
                                             </select>
                                         </td>
+
+                                        {/*  Delete button */}
+                                        <td className="px-6 py-4">
+                                            <button
+                                                onClick={() => setDeleteModal(order.id)}
+                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Delete Order"
+                                            >
+                                                <Trash2Icon className="size-4" />
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))
                             )}
@@ -151,6 +167,40 @@ export default function AdminOrders() {
                     </table>
                 </div>
             </div>
+
+            {/*  Delete Confirmation Modal */}
+            {deleteModal && (
+                <>
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => setDeleteModal(null)} />
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-red-100 rounded-full">
+                                    <Trash2Icon className="size-5 text-red-500" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-zinc-900">Delete Order</h3>
+                            </div>
+                            <p className="text-sm text-zinc-500 mb-6">
+                                Are you sure you want to delete order <span className="font-semibold text-zinc-900">#{deleteModal.slice(-6)}</span>? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteModal(null)}
+                                    className="flex-1 py-2.5 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-xl hover:bg-zinc-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className="flex-1 py-2.5 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Assign Modal */}
             {assignModal && (
@@ -160,7 +210,7 @@ export default function AdminOrders() {
                         <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-fade-in">
                             <h3 className="text-lg font-semibold text-app-green mb-4">Assign Delivery Partner</h3>
                             {partners.length === 0 ? (
-                                <p className="text-sm text-zinc-500 mb-4">No active delivery partners. Please onboard a partner first.</p>
+                                <p className="text-sm text-zinc-500 mb-4">No active delivery partners.</p>
                             ) : (
                                 <div className="space-y-2 mb-5 max-h-60 overflow-y-auto">
                                     {partners.map((p) => (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import type { Address } from "../types";
@@ -66,6 +66,9 @@ const Checkout = () => {
             clearCart();
             toast.success("Order placed successfully!");
             navigate(`/orders/${data.order.id}`);
+            // navigate(`/orders?clearCart=true`);
+
+            
         } catch (error: any) {
             toast.error(error.response?.data?.message || error.message);
         } finally {
@@ -180,3 +183,6 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
+
+
