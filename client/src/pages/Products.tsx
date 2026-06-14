@@ -31,6 +31,8 @@ const Products = () => {
             if (organic) params.set("organic", organic);
             if (sort) params.set("sort", sort);
             if (sort) params.set("sort", sort);
+            if (minPrice) params.set("minPrice", minPrice);  
+            if (maxPrice) params.set("maxPrice", maxPrice);
             if (maxPrice) params.set("maxPrice", maxPrice);
             params.set("page", String(page));
             params.set("limit", "12");

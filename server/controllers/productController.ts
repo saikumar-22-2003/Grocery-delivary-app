@@ -28,11 +28,12 @@ export const getProducts = async (req: Request, res: Response) => {
         if (minPrice) where.price.gte = Number(minPrice);
         if (maxPrice) where.price.lte = Number(maxPrice);
     }
-
-    const orderBy: any = {};
-    if (sort === "price-low") orderBy.price = "asc";
-    else if (sort === "price-high") orderBy.price = "desc";
-    else orderBy.createdAt = "desc";
+   const orderBy: any = {};
+   if (sort === "price_asc") orderBy.price = "asc";
+   else if (sort === "price_desc") orderBy.price = "desc";
+   else if (sort === "rating") orderBy.rating = "desc";
+   else if (sort === "name") orderBy.name = "asc";      
+    else orderBy.createdAt = "desc";                      
 
     const products = await prisma.product.findMany({ where, orderBy });
 
